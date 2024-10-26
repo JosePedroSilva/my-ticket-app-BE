@@ -11,3 +11,7 @@ coverage
 
 # Benchmarking
 benchmarks/graphs
+
+database.db
+
+.env
