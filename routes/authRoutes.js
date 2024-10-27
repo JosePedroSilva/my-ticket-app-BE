@@ -8,12 +8,16 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
 
+    console.log('Register request received:', { email });
+
     if (!email || !password) {
+        console.log('Email and password are required');
         return res.status(400).send('Email and password are required');
     }
 
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) {
+            console.error('Error hashing password:', err);
             return res.status(500).send('Error hashing password');
         }
 
@@ -21,16 +25,19 @@ router.post('/register', async (req, res) => {
 
         db.run(query, [email, hash], function (err) {
             if (err?.message.includes('UNIQUE constraint failed: users.email')) {
+                console.log('User already exists:', email);
                 return res.status(409).send('User already exists');
             }
 
             if (err) {
+                console.error('Error inserting user:', err);
                 return res.status(400).send({ error: err.message });
             }
 
             const token = jwt.sign({ id: this.lastID, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-            res.status(201).send({ token });
+            console.log('User registered successfully:', { id: this.lastID, email });
+            res.status(201).send({ token: token, user: { id: this.lastID, email } });
         });
     });
 });
@@ -46,15 +53,15 @@ router.post('/login', (req, res) => {
     const query = `SELECT * FROM users WHERE email = ?`;
 
     db.get(query, [email], (err, user) => {
-        if (!user) return res.status(404).send('User not found');
+        if (!user) return res.status(404).send({ message: 'User not found' });
         if (err) return res.status(500).send('Error finding user');
 
         bcrypt.compare(password, user.password, (err, result) => {
             if (err) return res.status(500).send('Error comparing passwords');
             if (!result) return res.status(401).send('Invalid password');
 
-            const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            res.status(200).send({ token });
+            const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            res.status(200).send({ token, user: { id: user.id, email: user.email, username: user.username } });
         });
     });
 });
