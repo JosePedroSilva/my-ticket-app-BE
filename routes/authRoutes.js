@@ -21,11 +21,12 @@ router.post('/register', async (req, res) => {
             return res.status(500).send('Error hashing password');
         }
 
-        const query = `INSERT INTO users (email, password) VALUES (?, ?)`;
+        const uuid = crypto.randomUUID();
 
-        db.run(query, [email, hash], function (err) {
+        const query = `INSERT INTO users (id, email, password) VALUES (?, ?, ?)`;
+
+        db.run(query, [uuid, email, hash], function (err) {
             if (err?.message.includes('UNIQUE constraint failed: users.email')) {
-                console.log('User already exists:', email);
                 return res.status(409).send('User already exists');
             }
 
