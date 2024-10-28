@@ -18,7 +18,7 @@ db.serialize(() => {
     // Projects table
     db.run(`
         CREATE TABLE IF NOT EXISTS projects (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT PRIMARY KEY,
             name TEXT,
             description TEXT,
             status TEXT DEFAULT 'active', -- e.g., 'active', 'inactive', 'archived'
@@ -55,8 +55,8 @@ db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS project_user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            project_id INTEGER,
+            user_id TEXT,
+            project_id TEXT,
             role TEXT, -- e.g., 'admin', 'member'
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE

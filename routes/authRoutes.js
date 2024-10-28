@@ -35,10 +35,10 @@ router.post('/register', async (req, res) => {
                 return res.status(400).send({ error: err.message });
             }
 
-            const token = jwt.sign({ id: this.lastID, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ id: uuid, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-            console.log('User registered successfully:', { id: this.lastID, email });
-            res.status(201).send({ token: token, user: { id: this.lastID, email } });
+            console.log('User registered successfully:', { id: uuid, email });
+            res.status(201).send({ token: token, user: { id: uuid, email } });
         });
     });
 });
