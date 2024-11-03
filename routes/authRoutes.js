@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const router = express.Router();
 
+const generateAccessToken = (user) => {
+    return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+}
+
 // Register user
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
@@ -35,10 +39,10 @@ router.post('/register', async (req, res) => {
                 return res.status(400).send({ error: err.message });
             }
 
-            const token = jwt.sign({ id: uuid, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const accessToken = generateAccessToken({ id: uuid, email });
 
             console.log('User registered successfully:', { id: uuid, email });
-            res.status(201).send({ token: token, user: { id: uuid, email } });
+            res.status(201).send({ token: accessToken, user: { id: uuid, email } });
         });
     });
 });
@@ -61,8 +65,9 @@ router.post('/login', (req, res) => {
             if (err) return res.status(500).send('Error comparing passwords');
             if (!result) return res.status(401).send('Invalid password');
 
-            const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            res.status(200).send({ token, user: { id: user.id, email: user.email, username: user.username } });
+            const accessToken = generateAccessToken({ id: user.id, email: user.email });
+
+            res.status(200).send({ token: accessToken, user: { id: user.id, email: user.email, username: user.username } });
         });
     });
 });
