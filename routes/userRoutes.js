@@ -3,11 +3,6 @@ const db = require('../config/database');
 const authenticateTokenMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 
-// Protected route for testing
-router.get('/protected', authenticateTokenMiddleware, (req, res) => {
-    res.status(200).send({ message: 'Protected route', user: req.user });
-});
-
 // Update username
 router.post('/update-username', authenticateTokenMiddleware, (req, res) => {
     const { username } = req.body;
