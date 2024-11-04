@@ -39,37 +39,44 @@ const generateAccessToken = (user) => {
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
 
-    console.log('Register request received:', { email });
+    console.log('[AUTH] Register attempt:', { email });
 
     if (!email || !password) {
-        console.log('Email and password are required');
+        console.warn('[AUTH] Registration failed: Missing credentials');
         return res.status(400).send('Email and password are required');
     }
 
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) {
-            console.error('Error hashing password:', err);
+            console.error('[AUTH] Password hashing failed:', err);
             return res.status(500).send('Error hashing password');
         }
 
         const uuid = crypto.randomUUID();
+        console.log('[AUTH] Generated UUID:', uuid);
 
         const query = `INSERT INTO users (id, email, password) VALUES (?, ?, ?)`;
 
         db.run(query, [uuid, email, hash], function (err) {
             if (err?.message.includes('UNIQUE constraint failed: users.email')) {
+                console.warn('[AUTH] Registration failed: Email already exists:', email);
                 return res.status(409).send('User already exists');
             }
 
             if (err) {
-                console.error('Error inserting user:', err);
+                console.error('[AUTH] Database insertion failed:', err);
                 return res.status(400).send({ error: err.message });
             }
 
             const accessToken = generateAccessToken({ id: uuid, email });
 
-            console.log('User registered successfully:', { id: uuid, email });
-            res.status(201).send({ accessToken, refreshToken, user: { id: uuid, email } });
+            console.info('[AUTH] User registered successfully:', {
+                id: uuid,
+                email,
+                timestamp: new Date().toISOString()
+            });
+
+            res.status(201).send({ accessToken, user: { id: uuid, email } });
         });
     });
 });
@@ -78,21 +85,42 @@ router.post('/register', async (req, res) => {
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
 
+    console.log('[AUTH] Login attempt:', { email });
+
     if (!email || !password) {
+        console.warn('[AUTH] Login failed: Missing credentials');
         return res.status(400).send('Email and password are required');
     }
 
     const query = `SELECT * FROM users WHERE email = ?`;
 
     db.get(query, [email], (err, user) => {
-        if (!user) return res.status(404).send({ message: 'User not found' });
-        if (err) return res.status(500).send('Error finding user');
+        if (!user) {
+            console.warn('[AUTH] Login failed: User not found:', email);
+            return res.status(404).send({ message: 'User not found' });
+        }
+        if (err) {
+            console.error('[AUTH] Database query failed:', err);
+            return res.status(500).send('Error finding user');
+        }
 
         bcrypt.compare(password, user.password, (err, result) => {
-            if (err) return res.status(500).send('Error comparing passwords');
-            if (!result) return res.status(401).send('Invalid password');
+            if (err) {
+                console.error('[AUTH] Password comparison failed:', err);
+                return res.status(500).send('Error comparing passwords');
+            }
+            if (!result) {
+                console.warn('[AUTH] Login failed: Invalid password for user:', email);
+                return res.status(401).send('Invalid password');
+            }
 
             const accessToken = generateAccessToken({ id: user.id, email: user.email });
+
+            console.info('[AUTH] User logged in successfully:', {
+                id: user.id,
+                email: user.email,
+                timestamp: new Date().toISOString()
+            });
 
             res.status(200).send({ token: accessToken, user: { id: user.id, email: user.email, username: user.username } });
         });
