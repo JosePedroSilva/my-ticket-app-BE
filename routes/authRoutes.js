@@ -5,35 +5,35 @@ const db = require('../config/database');
 const router = express.Router();
 
 const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '15m' });
+    return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '30d' });
 }
 
-const generateRefreshToken = (user) => {
-    const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' });
+// const generateRefreshToken = (user) => {
+//     const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' });
 
-    const tokenId = crypto.randomUUID();
+//     const tokenId = crypto.randomUUID();
 
-    const testQuery = `INSERT INTO test (testing_int, testing_date, testing_text) VALUES (?, ?, ?)`;
+//     const testQuery = `INSERT INTO test (testing_int, testing_date, testing_text) VALUES (?, ?, ?)`;
 
-    db.run(testQuery, [1, datetime('now', '+30 days'), 'test'], (err) => {
-        if (err) {
-            console.error('Error inserting test:', err);
-        }
-        console.log('Test inserted successfully:', { id: 1, testing_int: 1, testing_date: '2022-01-01', testing_text: 'test' });
-    });
+//     db.run(testQuery, [1, datetime('now', '+30 days'), 'test'], (err) => {
+//         if (err) {
+//             console.error('Error inserting test:', err);
+//         }
+//         console.log('Test inserted successfully:', { id: 1, testing_int: 1, testing_date: '2022-01-01', testing_text: 'test' });
+//     });
 
-    const query = `INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)`;
+//     const query = `INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)`;
 
-    db.run(query, [tokenId, user.id, refreshToken, datetime('now', '+30 days')], (err) => {
-        if (err) {
-            console.error('Error inserting refresh token:', err);
-        }
-        console.log('Refresh token inserted successfully:', { id: tokenId, user_id: user.id, token: refreshToken });
-    });
+//     db.run(query, [tokenId, user.id, refreshToken, datetime('now', '+30 days')], (err) => {
+//         if (err) {
+//             console.error('Error inserting refresh token:', err);
+//         }
+//         console.log('Refresh token inserted successfully:', { id: tokenId, user_id: user.id, token: refreshToken });
+//     });
 
-    return refreshToken;
+//     return refreshToken;
 
-}
+// }
 
 // Register user
 router.post('/register', async (req, res) => {
@@ -67,7 +67,6 @@ router.post('/register', async (req, res) => {
             }
 
             const accessToken = generateAccessToken({ id: uuid, email });
-            const refreshToken = generateRefreshToken({ id: uuid, email });
 
             console.log('User registered successfully:', { id: uuid, email });
             res.status(201).send({ accessToken, refreshToken, user: { id: uuid, email } });

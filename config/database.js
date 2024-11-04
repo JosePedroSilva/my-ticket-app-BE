@@ -3,20 +3,12 @@ const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./database.db');
 
 db.serialize(() => {
-    db.run(`
-        CREATE TABLE IF NOT EXISTS test (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            testing_int TEXT,
-            testing_date DATETIME,
-            testing_text TEXT
-        )     
-    `)
-    // Refresh tokens table
+    // Refresh tokens table - to be implemented 
     db.run(`
         CREATE TABLE IF NOT EXISTS refresh_tokens (
         id INTEGER PRIMARY KEY,
         user_id INTEGER NOT NULL,
-        token TEXT NOT NULL UNIQUE,
+        token TEXT NOT NULL UNIQUE, // Should be salted and hashed
         expires_at DATETIME NOT NULL, 
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
         REVOKED BOOLEAN DEFAULT FALSE,
