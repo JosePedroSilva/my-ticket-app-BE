@@ -8,7 +8,7 @@ db.serialize(() => {
         CREATE TABLE IF NOT EXISTS refresh_tokens (
         id INTEGER PRIMARY KEY,
         user_id INTEGER NOT NULL,
-        token TEXT NOT NULL UNIQUE, // Should be salted and hashed
+        token TEXT NOT NULL UNIQUE,
         expires_at DATETIME NOT NULL, 
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
         REVOKED BOOLEAN DEFAULT FALSE,
